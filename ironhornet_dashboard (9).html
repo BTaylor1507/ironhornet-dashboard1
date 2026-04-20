@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iron Hornet — Sales Command</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ih-black:#0A0B0D;--ih-dark:#111318;--ih-card:#161A22;--ih-border:#252C3A;
+  --ih-amber:#E8A020;--ih-amber-dim:#B07810;--ih-amber-glow:#E8A02022;
+  --ih-text:#E8ECF2;--ih-muted:#7A8499;--ih-dim:#3A4255;
+  --ih-green:#2DB87A;--ih-red:#D94F4F;--ih-blue:#3A8FD4;--ih-purple:#7B5CF0;
+  --r:6px;--r-lg:10px
+}
+html,body{height:100%;background:var(--ih-black);color:var(--ih-text);font-family:'Inter',sans-serif}
+body{display:flex;flex-direction:column;min-height:100vh}
+
+/* ── HEADER ── */
+.ih-header{
+  background:var(--ih-dark);border-bottom:1px solid var(--ih-border);
+  padding:12px 24px;display:flex;align-items:center;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:50
+}
+.ih-logo{display:flex;align-items:center;gap:10px}
+.ih-logo-text .brand{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:600;color:var(--ih-amber);letter-spacing:.1em;display:block}
+.ih-logo-text .sub{font-size:10px;color:var(--ih-muted);letter-spacing:.15em;text-transform:uppercase}
+.ih-header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ih-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ih-muted);padding:0 8px}
+.ih-status-dot{width:7px;height:7px;border-radius:50%;background:var(--ih-green);animation:pulse 2s infinite}
+.ih-datetime{font-size:11px;color:var(--ih-muted);letter-spacing:.04em;padding:0 8px;border-left:1px solid var(--ih-border)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── BUTTONS ── */
+.ih-btn{
+  font-size:11px;padding:7px 14px;border-radius:var(--r);border:1px solid var(--ih-border);
+  background:transparent;color:var(--ih-muted);cursor:pointer;font-family:'Inter',sans-serif;
+  letter-spacing:.04em;transition:.15s;white-space:nowrap
+}
+.ih-btn:hover{border-color:var(--ih-amber-dim);color:var(--ih-amber)}
+.ih-btn.primary{background:var(--ih-amber);color:#0A0B0D;border-color:var(--ih-amber);font-weight:500}
+.ih-btn.primary:hover{opacity:.88}
+.ih-btn.danger{background:var(--ih-red);color:#fff;border-color:var(--ih-red)}
+.ih-btn.danger:hover{opacity:.88}
+.ih-btn.sm{font-size:10px;padding:5px 10px}
+
+/* ── MAIN ── */
+.ih-main{padding:20px 24px;flex:1}
+
+/* ── METRICS ── */
+.ih-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px}
+.ih-metric{
+  background:var(--ih-card);border:1px solid var(--ih-border);border-radius:var(--r-lg);
+  padding:14px 16px;position:relative;overflow:hidden
+}
+.ih-metric::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--ih-border)}
+.ih-metric.amber::before{background:var(--ih-amber)}
+.ih-metric.green::before{background:var(--ih-green)}
+.ih-metric.red::before{background:var(--ih-red)}
+.ih-metric.blue::before{background:var(--ih-blue)}
+.ih-metric.purple::before{background:var(--ih-purple)}
+.ih-metric .lbl{font-size:10px;color:var(--ih-muted);letter-spacing:.09em;text-transform:uppercase;margin-bottom:6px}
+.ih-metric .val{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:600;color:var(--ih-text);line-height:1}
+.ih-metric .delta{font-size:10px;color:var(--ih-muted);margin-top:4px}
+
+/* ── FILTER BAR ── */
+.ih-filter{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;
+  padding:12px 16px;background:var(--ih-card);border:1px solid var(--ih-border);border-radius:var(--r-lg)
+}
+.ih-filter label{font-size:10px;color:var(--ih-muted);letter-spacing:.08em;text-transform:uppercase}
+.ih-filter select,.ih-filter input{
+  font-size:11px;padding:5px 10px;border-radius:var(--r);border:1px solid var(--ih-border);
+  background:#0D1016;color:var(--ih-text);font-family:'Inter',sans-serif
+}
+.ih-filter select:focus,.ih-filter input:focus{outline:none;border-color:var(--ih-amber-dim)}
+
+/* ── TABS ── */
+.ih-tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--ih-border)}
+.ih-tab{
+  font-size:13px;padding:9px 18px;border:none;background:transparent;color:var(--ih-muted);
+  cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:600;letter-spacing:.07em;
+  text-transform:uppercase;border-bottom:2px solid transparent;transition:.15s
+}
+.ih-tab:hover{color:var(--ih-text)}
+.ih-tab.active{color:var(--ih-amber);border-bottom-color:var(--ih-amber)}
+
+/* ── PAGES ── */
+.ih-page{display:none}.ih-page.active{display:block}
+
+/* ── KANBAN ── */
+.ih-kanban{display:flex;gap:12px;overflow-x:auto;padding-bottom:14px}
+.ih-stage-col{display:flex;flex-direction:column;gap:8px;min-width:200px}
+.ih-stage-hdr{
+  font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;padding:7px 11px;border-radius:var(--r);
+  display:flex;justify-content:space-between;align-items:center;border:1px solid
+}
+.ih-card{
+  background:var(--ih-card);border:1px solid var(--ih-border);border-radius:var(--r-lg);
+  padding:11px 13px;cursor:pointer;transition:.13s
+}
+.ih-card:hover{border-color:var(--ih-amber-dim);background:#1A1F2B}
+.ih-card .client{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:var(--ih-text);margin-bottom:2px;letter-spacing:.03em}
+.ih-card .loc{font-size:10px;color:var(--ih-muted);margin-bottom:8px}
+.ih-card .crow{display:flex;justify-content:space-between;font-size:10px;color:var(--ih-muted);margin-bottom:2px}
+.ih-card .mrr{color:var(--ih-amber);font-weight:500;font-family:'Rajdhani',sans-serif;font-size:13px}
+.ih-badge{font-size:9px;padding:2px 7px;border-radius:3px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;font-family:'Rajdhani',sans-serif}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
+th{
+  text-align:left;font-size:10px;font-weight:600;color:var(--ih-muted);
+  padding:9px 11px;border-bottom:1px solid var(--ih-border);letter-spacing:.09em;
+  text-transform:uppercase;white-space:nowrap;background:var(--ih-card)
+}
+td{padding:9px 11px;border-bottom:1px solid #1C2130;color:var(--ih-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr:hover td{background:#161C28;cursor:pointer}
+
+/* ── ANALYTICS ── */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:700px){.chart-grid{grid-template-columns:1fr}}
+.chart-box{background:var(--ih-card);border:1px solid var(--ih-border);border-radius:var(--r-lg);padding:16px}
+.chart-box h4{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--ih-muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px}
+.chart-box .legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;font-size:10px;color:var(--ih-muted)}
+.chart-box .legend span{display:flex;align-items:center;gap:4px}
+.chart-box .legend i{width:8px;height:8px;border-radius:1px;display:inline-block;flex-shrink:0}
+.rep-row{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--ih-border);font-size:11px;gap:10px}
+.rep-name{min-width:110px;color:var(--ih-text);font-weight:500}
+.rep-bar-wrap{flex:1;height:5px;background:#1C2130;border-radius:3px}
+.rep-bar{height:100%;border-radius:3px;background:var(--ih-amber);transition:.4s}
+.rep-val{min-width:65px;text-align:right;color:var(--ih-amber);font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600}
+
+/* ── HISTORY ── */
+.hist-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--ih-border);align-items:flex-start}
+.hist-dot{width:8px;height:8px;border-radius:50%;margin-top:3px;flex-shrink:0}
+.hist-body{flex:1;font-size:11px;color:var(--ih-text)}
+.hist-body .note{font-size:10px;color:var(--ih-muted);margin-top:3px}
+.hist-time{font-size:10px;color:var(--ih-muted);white-space:nowrap}
+
+/* ── MODALS ── */
+.modal-bg{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;
+  align-items:flex-start;justify-content:center;padding-top:48px;overflow-y:auto
+}
+.modal-bg.open{display:flex}
+.modal{
+  background:var(--ih-dark);border:1px solid var(--ih-border);border-radius:var(--r-lg);
+  padding:22px;width:95%;max-width:620px;margin-bottom:48px
+}
+.modal h3{
+  font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ih-amber);margin-bottom:16px;
+  padding-bottom:10px;border-bottom:1px solid var(--ih-border)
+}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:500px){.field-grid{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:4px}
+.field.full{grid-column:1/-1}
+.field label{font-size:10px;color:var(--ih-muted);letter-spacing:.09em;text-transform:uppercase;font-weight:600}
+.field input,.field select,.field textarea{
+  font-size:12px;padding:8px 11px;border:1px solid var(--ih-border);border-radius:var(--r);
+  background:#0D1016;color:var(--ih-text);font-family:'Inter',sans-serif;transition:.13s
+}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--ih-amber-dim)}
+.field textarea{resize:vertical;min-height:60px}
+.modal-actions{display:flex;justify-content:space-between;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--ih-border)}
+
+/* ── DEAL DETAIL ── */
+.detail-section{margin-bottom:14px}
+.detail-section h4{
+  font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;color:var(--ih-muted);
+  letter-spacing:.13em;text-transform:uppercase;margin-bottom:8px;
+  padding-bottom:5px;border-bottom:1px solid var(--ih-border)
+}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.dk{font-size:10px;color:var(--ih-muted);letter-spacing:.05em}
+.dv{font-size:13px;color:var(--ih-text);font-weight:500;margin-bottom:6px;font-family:'Rajdhani',sans-serif}
+.prog-bar{height:3px;border-radius:2px;background:var(--ih-dim);margin:.5rem 0 1.1rem}
+.prog-fill{height:100%;border-radius:2px;background:var(--ih-amber)}
+
+/* ── FOOTER ── */
+.ih-footer{
+  border-top:1px solid var(--ih-border);background:var(--ih-dark);
+  padding:10px 24px;display:flex;align-items:center;justify-content:space-between;
+  font-size:10px;color:var(--ih-muted);letter-spacing:.06em
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="ih-header">
+  <div class="ih-logo">
+    <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="19,2 36,11 36,27 19,36 2,27 2,11" fill="#111318" stroke="#E8A020" stroke-width="1.5"/>
+      <polygon points="19,7 30,13 30,25 19,31 8,25 8,13" fill="#0A0B0D" stroke="#E8A02050" stroke-width="1"/>
+      <path d="M14 15 L19 12 L24 15 L24 22 L19 25 L14 22 Z" fill="#E8A020" opacity=".92"/>
+      <line x1="19" y1="6" x2="19" y2="10" stroke="#E8A020" stroke-width="1.5"/>
+      <line x1="19" y1="28" x2="19" y2="32" stroke="#E8A020" stroke-width="1.5"/>
+      <line x1="5" y1="13" x2="9" y2="15" stroke="#E8A020" stroke-width="1.5"/>
+      <line x1="29" y1="23" x2="33" y2="25" stroke="#E8A020" stroke-width="1.5"/>
+      <line x1="33" y1="13" x2="29" y2="15" stroke="#E8A020" stroke-width="1.5"/>
+      <line x1="5" y1="25" x2="9" y2="23" stroke="#E8A020" stroke-width="1.5"/>
+    </svg>
+    <div class="ih-logo-text">
+      <span class="brand">IRON HORNET</span>
+      <span class="sub">Sales Command Dashboard</span>
+    </div>
+  </div>
+  <div class="ih-header-right">
+    <div class="ih-status"><div class="ih-status-dot"></div><span>Live</span></div>
+    <span id="syncStatus" style="font-size:10px;color:#E8A020;letter-spacing:.04em;padding:0 6px"></span>
+    <div class="ih-datetime" id="clock"></div>
+    <button class="ih-btn" id="exportBtn">&#8681; Export CSV</button>
+    <button class="ih-btn" id="toggleView">List view</button>
+    <button class="ih-btn primary" id="addDeal">+ New Deal</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="ih-main">
+  <div class="ih-metrics" id="metrics"></div>
+
+  <div class="ih-filter">
+    <label>Rep</label>
+    <select id="fRep"><option value="">All reps</option></select>
+    <label>Stage</label>
+    <select id="fStage"><option value="">All stages</option></select>
+    <label>Min MRR</label>
+    <input type="number" id="fMrr" placeholder="$0" style="width:80px">
+    <label>Search</label>
+    <input type="text" id="fSearch" placeholder="Client or location..." style="width:180px">
+    <button class="ih-btn sm" id="clearFilters">Clear filters</button>
+  </div>
+
+  <div class="ih-tabs">
+    <button class="ih-tab active" data-page="kanban">Pipeline</button>
+    <button class="ih-tab" data-page="list">List</button>
+    <button class="ih-tab" data-page="analytics">Analytics</button>
+    <button class="ih-tab" data-page="history">History</button>
+  </div>
+
+  <div class="ih-page active" id="page-kanban">
+    <div class="ih-kanban" id="kanban"></div>
+  </div>
+
+  <div class="ih-page" id="page-list">
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:140px">Client</th>
+          <th style="width:140px">Location</th>
+          <th style="width:110px">Rep</th>
+          <th style="width:120px">Stage</th>
+          <th style="width:75px">MRR</th>
+          <th style="width:75px">ARR</th>
+          <th style="width:100px">Close date</th>
+          <th style="width:100px">Install date</th>
+          <th style="width:160px">Equipment</th>
+          <th style="width:65px">Prob.</th>
+        </tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="ih-page" id="page-analytics">
+    <div class="chart-grid">
+      <div class="chart-box">
+        <h4>Pipeline ARR by stage</h4>
+        <div class="legend" id="leg1"></div>
+        <div style="position:relative;height:200px"><canvas id="chartStage"></canvas></div>
+      </div>
+      <div class="chart-box">
+        <h4>Win / loss breakdown</h4>
+        <div class="legend" id="leg2"></div>
+        <div style="position:relative;height:200px"><canvas id="chartWin"></canvas></div>
+      </div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-box">
+        <h4>Active MRR by rep</h4>
+        <div id="repLeader"></div>
+      </div>
+      <div class="chart-box">
+        <h4>Monthly pipeline trend</h4>
+        <div style="position:relative;height:200px"><canvas id="chartTrend"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ih-page" id="page-history">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ih-muted)">Stage history log</span>
+      <select id="histFilter" style="font-size:11px;padding:5px 10px;border:1px solid var(--ih-border);border-radius:var(--r);background:#0D1016;color:var(--ih-text);font-family:'Inter',sans-serif">
+        <option value="">All deals</option>
+      </select>
+    </div>
+    <div id="histList"></div>
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="ih-footer">
+  <span>IRON HORNET &mdash; Sales Command &copy; 2026</span>
+  <span id="dealCount"></span>
+</footer>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-bg" id="addModal">
+  <div class="modal">
+    <h3 id="modalTitle">New Deal</h3>
+    <div class="field-grid" id="formFields"></div>
+    <div class="modal-actions">
+      <div><button class="ih-btn danger" id="deleteBtn" style="display:none">Delete deal</button></div>
+      <div style="display:flex;gap:8px">
+        <button class="ih-btn" id="cancelBtn">Cancel</button>
+        <button class="ih-btn primary" id="saveBtn">Save Deal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-bg" id="detailModal">
+  <div class="modal" id="detailContent"></div>
+</div>
+
+<script>
+const STAGES=[
+  {id:'prospect',   label:'Prospect',    color:'#3A8FD4',bg:'#3A8FD420',pct:10},
+  {id:'qualified',  label:'Qualified',   color:'#7B5CF0',bg:'#7B5CF020',pct:25},
+  {id:'proposal',   label:'Proposal',    color:'#E8A020',bg:'#E8A02020',pct:50},
+  {id:'negotiation',label:'Negotiation', color:'#D94F4F',bg:'#D94F4F20',pct:75},
+  {id:'closed_won', label:'Closed Won',  color:'#2DB87A',bg:'#2DB87A20',pct:100},
+  {id:'closed_lost',label:'Closed Lost', color:'#5A6070',bg:'#5A607020',pct:0}
+];
+const REPS=['Jake Guso','Geoff Rizk','Brian Taylor','Chris Cervino'];
+const EQUIPMENT_OPTS=['Camera','Brain Box','Drone','Puck'];
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycby9wV3xP2z8uEZuKCw0o9WZwo1CobdrhnptjsbIiJ2Jjy7O9eCXHFST066aKy99hex0/exec';
+let charts={};
+
+let deals=[];
+let nextId=100,editingId=null;
+
+let stageHistory=[
+  {dealId:2,dealName:'Summit Fabrication',from:'prospect',to:'qualified',by:'Geoff Rizk',date:'2026-02-01',note:''},
+  {dealId:2,dealName:'Summit Fabrication',from:'qualified',to:'proposal',by:'Geoff Rizk',date:'2026-02-15',note:'Sent proposal v1'},
+  {dealId:3,dealName:'ClearPath Media',from:'prospect',to:'qualified',by:'Brian Taylor',date:'2025-12-20',note:''},
+  {dealId:3,dealName:'ClearPath Media',from:'qualified',to:'proposal',by:'Brian Taylor',date:'2026-01-10',note:'Custom enterprise proposal'},
+  {dealId:3,dealName:'ClearPath Media',from:'proposal',to:'negotiation',by:'Brian Taylor',date:'2026-02-05',note:'Price negotiation started'},
+  {dealId:5,dealName:'Apex Auto Parts',from:'proposal',to:'closed_won',by:'Jake Guso',date:'2026-03-15',note:'Signed MSA'},
+];
+
+const fmt=n=>n>=1000?'$'+(n/1000).toFixed(1)+'k':'$'+n;
+const arrV=mrr=>mrr*12;
+const si=id=>STAGES.find(s=>s.id===id)||STAGES[0];
+
+/* ── GOOGLE SHEETS SYNC ── */
+function showSyncStatus(msg,color='#E8A020'){
+  const el=document.getElementById('syncStatus');
+  if(el){el.textContent=msg;el.style.color=color;setTimeout(()=>{el.textContent=''},3000);}
+}
+
+async function loadDealsFromSheet(){
+  document.getElementById('syncStatus').textContent='Loading...';
+  try{
+    const res=await fetch(SCRIPT_URL+'?nocache='+Date.now());
+    const text=await res.text();
+    let data=[];
+    try{data=JSON.parse(text);}catch(e){data=[];}
+    if(Array.isArray(data)&&data.length>0){
+      deals=data.map(d=>({
+        ...d,
+        id:Number(d.id),
+        mrr:Number(d.mrr)||0,
+        equipQty:{
+          Camera:Number((d.equipQty&&d.equipQty.Camera)||0),
+          Brain_Box:Number((d.equipQty&&d.equipQty.Brain_Box)||0),
+          Drone:Number((d.equipQty&&d.equipQty.Drone)||0),
+          Puck:Number((d.equipQty&&d.equipQty.Puck)||0)
+        }
+      }));
+      nextId=Math.max(...deals.map(d=>Number(d.id)||0))+1;
+      showSyncStatus('Loaded from Google Sheets ✓','#2DB87A');
+    } else {
+      loadLocalFallback();
+      showSyncStatus('Seeding sheet with data...','#E8A020');
+      await saveDealsToSheet();
+    }
+  }catch(e){
+    loadLocalFallback();
+    showSyncStatus('Using local data','#D94F4F');
+  }
+  render();
+}
+
+function loadLocalFallback(){
+  deals=[
+    {id:2,client:'Summit Fabrication',location:'Long Island City, NY',rep:'Geoff Rizk',stage:'proposal',firstContact:'2026-01-25',mrr:1400,equipment:'Puck ×3',equipQty:{Camera:0,Brain_Box:0,Drone:0,Puck:3},closeDate:'2026-04-15',installDate:'2026-04-28',teamMembers:'Geoff Rizk, Install Team B',notes:'Expansion from 100 Mbps'},
+    {id:3,client:'ClearPath Media',location:'Greenpoint, NY',rep:'Brian Taylor',stage:'negotiation',firstContact:'2025-12-12',mrr:4200,equipment:'Drone ×2, Brain Box ×1',equipQty:{Camera:0,Brain_Box:1,Drone:2,Puck:0},closeDate:'2026-04-10',installDate:'2026-04-22',teamMembers:'Brian Taylor, Install Team A, Network Eng',notes:'Studio facility, latency sensitive'},
+    {id:5,client:'Apex Auto Parts',location:'Hunts Point, NY',rep:'Jake Guso',stage:'closed_won',firstContact:'2025-11-05',mrr:1800,equipment:'Puck ×2, Brain Box ×1',equipQty:{Camera:0,Brain_Box:1,Drone:0,Puck:2},closeDate:'2026-03-15',installDate:'2026-03-25',teamMembers:'Jake Guso, Install Team C',notes:'Signed. Install complete.'},
+    {id:8,client:'Blue Ridge Printing',location:'Astoria, NY',rep:'Chris Cervino',stage:'proposal',firstContact:'2026-03-05',mrr:2200,equipment:'Drone ×1, Camera ×2',equipQty:{Camera:2,Brain_Box:0,Drone:1,Puck:0},closeDate:'2026-04-30',installDate:'',teamMembers:'Chris Cervino, Install Team B',notes:'High-volume print facility'},
+    {id:9,client:'Realterm',location:'TBD',rep:'Jake Guso',stage:'prospect',firstContact:'2026-04-17',mrr:0,equipment:'',equipQty:{Camera:0,Brain_Box:0,Drone:0,Puck:0},closeDate:'',installDate:'',teamMembers:'Jake Guso',notes:''},
+    {id:10,client:'Blacktop',location:'TBD',rep:'Geoff Rizk',stage:'prospect',firstContact:'2026-04-17',mrr:0,equipment:'',equipQty:{Camera:0,Brain_Box:0,Drone:0,Puck:0},closeDate:'',installDate:'',teamMembers:'Geoff Rizk',notes:''},
+    {id:11,client:'RVH',location:'TBD',rep:'Brian Taylor',stage:'prospect',firstContact:'2026-04-17',mrr:0,equipment:'',equipQty:{Camera:0,Brain_Box:0,Drone:0,Puck:0},closeDate:'',installDate:'',teamMembers:'Brian Taylor',notes:''},
+    {id:12,client:'Sparebox',location:'TBD',rep:'Chris Cervino',stage:'prospect',firstContact:'2026-04-17',mrr:0,equipment:'',equipQty:{Camera:0,Brain_Box:0,Drone:0,Puck:0},closeDate:'',installDate:'',teamMembers:'Chris Cervino',notes:''},
+  ];
+  nextId=100;
+}
+
+async function saveDealsToSheet(){
+  showSyncStatus('Saving...','#E8A020');
+  try{
+    const payload=JSON.stringify({action:'save',deals:deals.map(d=>({
+      id:d.id, client:d.client||'', location:d.location||'', rep:d.rep||'',
+      stage:d.stage||'', firstContact:d.firstContact||'', mrr:d.mrr||0,
+      equipQty_Camera:(d.equipQty&&d.equipQty.Camera)||0,
+      equipQty_BrainBox:(d.equipQty&&d.equipQty.Brain_Box)||0,
+      equipQty_Drone:(d.equipQty&&d.equipQty.Drone)||0,
+      equipQty_Puck:(d.equipQty&&d.equipQty.Puck)||0,
+      equipment:d.equipment||'', closeDate:d.closeDate||'',
+      installDate:d.installDate||'', teamMembers:d.teamMembers||'', notes:d.notes||''
+    }))});
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:payload});
+    showSyncStatus('Saved to Google Sheets ✓','#2DB87A');
+  }catch(e){
+    showSyncStatus('Save failed','#D94F4F');
+  }
+}
+
+/* Live clock */
+function updateClock(){
+  const now=new Date();
+  document.getElementById('clock').textContent=now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})+' '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+updateClock();setInterval(updateClock,1000);
+
+/* Footer count */
+function updateFooter(){
+  document.getElementById('dealCount').textContent=`${deals.length} deals · ${deals.filter(d=>d.stage!=='closed_lost').length} active`;
+}
+
+function filtered(){
+  const rep=document.getElementById('fRep').value,stage=document.getElementById('fStage').value;
+  const mrr=parseFloat(document.getElementById('fMrr').value)||0;
+  const search=document.getElementById('fSearch').value.toLowerCase();
+  return deals.filter(d=>{
+    if(rep&&d.rep!==rep)return false;
+    if(stage&&d.stage!==stage)return false;
+    if(d.mrr<mrr)return false;
+    if(search&&!d.client.toLowerCase().includes(search)&&!d.location.toLowerCase().includes(search))return false;
+    return true;
+  });
+}
+
+function renderMetrics(){
+  const active=deals.filter(d=>d.stage!=='closed_lost');
+  const won=deals.filter(d=>d.stage==='closed_won');
+  const lost=deals.filter(d=>d.stage==='closed_lost');
+  const closed=won.length+lost.length;
+  const winRate=closed>0?Math.round(won.length/closed*100):0;
+  const pipeline=active.reduce((s,d)=>s+d.mrr,0)*12;
+  const wonMRR=won.reduce((s,d)=>s+d.mrr,0);
+  const closing=deals.filter(d=>d.closeDate&&new Date(d.closeDate)<=new Date(Date.now()+30*86400000)&&!['closed_won','closed_lost'].includes(d.stage)).length;
+  const totalCameras=active.reduce((s,d)=>s+((d.equipQty&&d.equipQty.Camera)||0),0);
+  const totalBrainBoxes=active.reduce((s,d)=>s+((d.equipQty&&d.equipQty.Brain_Box)||0),0);
+  document.getElementById('metrics').innerHTML=`
+    <div class="ih-metric amber"><div class="lbl">Pipeline ARR</div><div class="val">${fmt(pipeline)}</div><div class="delta">${active.length} active deals</div></div>
+    <div class="ih-metric green"><div class="lbl">Won MRR</div><div class="val">${fmt(wonMRR)}</div><div class="delta">/mo recurring</div></div>
+    <div class="ih-metric blue"><div class="lbl">Win rate</div><div class="val">${winRate}%</div><div class="delta">${won.length} of ${closed} closed</div></div>
+    <div class="ih-metric red"><div class="lbl">Closing soon</div><div class="val">${closing}</div><div class="delta">within 30 days</div></div>
+    <div class="ih-metric purple"><div class="lbl">Total deals</div><div class="val">${deals.length}</div><div class="delta">${REPS.length} reps active</div></div>
+    <div class="ih-metric amber"><div class="lbl">Cameras required</div><div class="val">${totalCameras}</div><div class="delta">across active deals</div></div>
+    <div class="ih-metric blue"><div class="lbl">Brain boxes required</div><div class="val">${totalBrainBoxes}</div><div class="delta">across active deals</div></div>
+  `;
+}
+
+function renderKanban(){
+  const data=filtered(),kb=document.getElementById('kanban');kb.innerHTML='';
+  STAGES.forEach(st=>{
+    const sd=data.filter(d=>d.stage===st.id),sm=sd.reduce((s,d)=>s+d.mrr,0);
+    const col=document.createElement('div');col.className='ih-stage-col';
+    col.innerHTML=`<div class="ih-stage-hdr" style="background:${st.bg};color:${st.color};border-color:${st.color}50"><span>${st.label}</span><span style="font-size:10px;opacity:.8">${sd.length} · ${fmt(sm)}</span></div>`;
+    sd.forEach(d=>{
+      const days=Math.round((Date.now()-new Date(d.firstContact))/86400000);
+      const card=document.createElement('div');card.className='ih-card';
+      card.innerHTML=`<div class="client">${d.client}</div><div class="loc">${d.location}</div>
+        <div class="crow"><span>${d.rep}</span><span class="mrr">${fmt(d.mrr)}/mo</span></div>
+        <div class="crow"><span>ARR ${fmt(arrV(d.mrr))}</span><span>${days}d ago</span></div>
+        ${d.closeDate?`<div class="crow" style="margin-top:4px"><span style="color:${st.color};font-size:10px">Close ${d.closeDate}</span></div>`:''}`;
+      card.onclick=()=>showDetail(d.id);col.appendChild(card);
+    });
+    const ab=document.createElement('div');
+    ab.innerHTML=`<button class="ih-btn" style="width:100%;font-size:10px;letter-spacing:.07em;margin-top:2px" data-stage="${st.id}">+ ADD TO ${st.label.toUpperCase()}</button>`;
+    ab.querySelector('button').onclick=e=>openAddModal(e.target.dataset.stage);
+    col.appendChild(ab);kb.appendChild(col);
+  });
+}
+
+function renderTable(){
+  const data=filtered(),tb=document.getElementById('tableBody');tb.innerHTML='';
+  data.forEach(d=>{
+    const st=si(d.stage),tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td title="${d.client}" style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600">${d.client}</td>
+      <td title="${d.location}">${d.location}</td>
+      <td>${d.rep}</td>
+      <td><span class="ih-badge" style="background:${st.bg};color:${st.color};border:1px solid ${st.color}40">${st.label}</span></td>
+      <td style="color:#E8A020;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600">${fmt(d.mrr)}</td>
+      <td>${fmt(arrV(d.mrr))}</td>
+      <td>${d.closeDate||'—'}</td>
+      <td>${d.installDate||'—'}</td>
+      <td title="${d.equipment||'—'}">${d.equipment||'—'}</td>
+      <td><span class="ih-badge" style="background:${st.bg};color:${st.color}">${st.pct}%</span></td>`;
+    tr.onclick=()=>showDetail(d.id);tb.appendChild(tr);
+  });
+}
+
+function dc(key){if(charts[key]){charts[key].destroy();delete charts[key];}}
+
+function renderAnalytics(){
+  const stageARR=STAGES.map(st=>deals.filter(d=>d.stage===st.id).reduce((s,d)=>s+arrV(d.mrr),0));
+  dc('stage');
+  charts['stage']=new Chart(document.getElementById('chartStage'),{
+    type:'bar',
+    data:{labels:STAGES.map(s=>s.label),datasets:[{data:stageARR,backgroundColor:STAGES.map(s=>s.bg),borderColor:STAGES.map(s=>s.color),borderWidth:1.5,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>fmt(v),color:'#7A8499',font:{size:10}},grid:{color:'#1C2130'},border:{display:false}},
+              x:{ticks:{color:'#7A8499',font:{size:9}},grid:{display:false},border:{display:false}}}}
+  });
+
+  const won=deals.filter(d=>d.stage==='closed_won').length;
+  const lost=deals.filter(d=>d.stage==='closed_lost').length;
+  const open=deals.length-won-lost;
+  document.getElementById('leg2').innerHTML=`
+    <span><i style="background:#2DB87A"></i>Won ${won}</span>
+    <span><i style="background:#D94F4F"></i>Lost ${lost}</span>
+    <span><i style="background:#3A8FD4"></i>Open ${open}</span>`;
+  dc('win');
+  charts['win']=new Chart(document.getElementById('chartWin'),{
+    type:'doughnut',
+    data:{labels:['Won','Lost','Open'],datasets:[{data:[won,lost,open],backgroundColor:['#2DB87A','#D94F4F','#3A8FD4'],borderWidth:0,borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'68%'}
+  });
+
+  const repData=REPS.map(r=>({rep:r,mrr:deals.filter(d=>d.rep===r&&d.stage!=='closed_lost').reduce((s,d)=>s+d.mrr,0)})).sort((a,b)=>b.mrr-a.mrr);
+  const maxMrr=repData[0]?.mrr||1;
+  document.getElementById('repLeader').innerHTML=repData.map((r,i)=>`
+    <div class="rep-row">
+      <span class="rep-name">${r.rep}</span>
+      <div class="rep-bar-wrap"><div class="rep-bar" style="width:${Math.round(r.mrr/maxMrr*100)}%;opacity:${(1-i*0.12).toFixed(2)}"></div></div>
+      <span class="rep-val">${fmt(r.mrr)}/mo</span>
+    </div>`).join('');
+
+  dc('trend');
+  charts['trend']=new Chart(document.getElementById('chartTrend'),{
+    type:'line',
+    data:{labels:['Oct','Nov','Dec','Jan','Feb','Mar'],datasets:[{data:[3200,4100,3800,5200,6800,9150],borderColor:'#E8A020',backgroundColor:'#E8A02015',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#E8A020',pointBorderColor:'#111318',pointBorderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>fmt(v),color:'#7A8499',font:{size:10}},grid:{color:'#1C2130'},border:{display:false}},
+              x:{ticks:{color:'#7A8499',font:{size:10}},grid:{display:false},border:{display:false}}}}
+  });
+}
+
+function renderHistory(){
+  const filter=document.getElementById('histFilter').value;
+  const sel=document.getElementById('histFilter');
+  const names=[...new Set(stageHistory.map(h=>h.dealName))];
+  const cur=sel.value;
+  sel.innerHTML='<option value="">All deals</option>'+names.map(n=>`<option value="${n}"${n===cur?' selected':''}>${n}</option>`).join('');
+  const items=filter?stageHistory.filter(h=>h.dealName===filter):[...stageHistory].reverse();
+  document.getElementById('histList').innerHTML=items.length?items.map(h=>{
+    const t=si(h.to);
+    return `<div class="hist-item">
+      <div class="hist-dot" style="background:${t.color}"></div>
+      <div class="hist-body">
+        <span style="font-family:'Rajdhani',sans-serif;font-weight:700">${h.dealName}</span>
+        <span style="color:#7A8499"> moved to </span>
+        <span class="ih-badge" style="background:${t.bg};color:${t.color};border:1px solid ${t.color}40">${t.label}</span>
+        <span style="color:#7A8499"> &middot; ${h.by}</span>
+        ${h.note?`<div class="note">${h.note}</div>`:''}
+      </div>
+      <div class="hist-time">${h.date}</div>
+    </div>`;
+  }).join(''):'<div style="font-size:12px;color:#7A8499;padding:1rem 0">No history recorded yet.</div>';
+}
+
+function populateFilters(){
+  const rSel=document.getElementById('fRep'),cur=rSel.value;
+  rSel.innerHTML='<option value="">All reps</option>'+REPS.map(r=>`<option value="${r}"${r===cur?' selected':''}>${r}</option>`).join('');
+  const sSel=document.getElementById('fStage'),scur=sSel.value;
+  sSel.innerHTML='<option value="">All stages</option>'+STAGES.map(s=>`<option value="${s.id}"${s.id===scur?' selected':''}>${s.label}</option>`).join('');
+}
+
+function render(){
+  renderMetrics();populateFilters();updateFooter();
+  const p=document.querySelector('.ih-tab.active')?.dataset.page||'kanban';
+  if(p==='kanban')renderKanban();
+  else if(p==='list')renderTable();
+  else if(p==='analytics')renderAnalytics();
+  else if(p==='history')renderHistory();
+}
+
+const FIELDS=[
+  {key:'client',label:'Client name',type:'text'},{key:'location',label:'Yard location',type:'text'},
+  {key:'rep',label:'Sales rep',type:'select',options:REPS},
+  {key:'stage',label:'Stage',type:'select',options:STAGES.map(s=>({v:s.id,l:s.label}))},
+  {key:'firstContact',label:'First contact',type:'date'},{key:'mrr',label:'Potential MRR ($)',type:'number'},
+  {key:'closeDate',label:'Target close date',type:'date'},{key:'installDate',label:'Install date',type:'date'},
+  {key:'teamMembers',label:'Team members',type:'text'},
+  {key:'equipQty',label:'Equipment & quantity',type:'equipqty',full:true},
+  {key:'notes',label:'Notes',type:'textarea',full:true},
+];
+
+function buildForm(data={}){
+  return FIELDS.map(f=>{
+    const val=data[f.key]||'';let input='';
+    if(f.type==='equipqty'){
+      const qty=data.equipQty||{Camera:0,Brain_Box:0,Drone:0,Puck:0};
+      const qtyOpts=Array.from({length:21},(_,i)=>i).map(n=>`<option value="${n}">${n===0?'None':n}</option>`).join('');
+      input=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 0">${EQUIPMENT_OPTS.map(o=>{
+        const key=o.replace(/\s/g,'_');
+        const q=qty[key]||0;
+        const opts=Array.from({length:21},(_,i)=>i).map(n=>`<option value="${n}"${n===q?' selected':''}>${n===0?'None':n}</option>`).join('');
+        return`<div style="display:flex;align-items:center;gap:8px;background:#0D1016;border:1px solid var(--ih-border);border-radius:var(--r);padding:6px 10px">
+          <span style="flex:1;font-size:12px;color:var(--ih-text)">${o}</span>
+          <select name="qty_${key}" style="width:72px;font-size:12px;padding:3px 6px;text-align:center">${opts}</select>
+        </div>`;
+      }).join('')}</div>`;
+      return `<div class="field full"><label>${f.label}</label>${input}</div>`;
+    }else if(f.type==='select'){
+      const opts=(typeof f.options[0]==='object')?f.options.map(o=>`<option value="${o.v}"${val===o.v?' selected':''}>${o.l}</option>`).join(''):f.options.map(o=>`<option value="${o}"${val===o?' selected':''}>${o}</option>`).join('');
+      input=`<select name="${f.key}"><option value="">Select...</option>${opts}</select>`;
+    }else if(f.type==='textarea'){input=`<textarea name="${f.key}">${val}</textarea>`;}
+    else{input=`<input type="${f.type}" name="${f.key}" value="${val}" placeholder="${f.label}">`;}
+    return `<div class="field${f.full?' full':''}""><label>${f.label}</label>${input}</div>`;
+  }).join('');
+}
+
+function openAddModal(stage=''){
+  editingId=null;
+  document.getElementById('modalTitle').textContent='New Deal';
+  document.getElementById('formFields').innerHTML=buildForm(stage?{stage}:{});
+  document.getElementById('deleteBtn').style.display='none';
+  document.getElementById('addModal').classList.add('open');
+}
+function openEditModal(id){
+  editingId=id;
+  const d=deals.find(x=>x.id===id);
+  document.getElementById('modalTitle').textContent='Edit Deal';
+  document.getElementById('formFields').innerHTML=buildForm(d);
+  document.getElementById('deleteBtn').style.display='inline-block';
+  document.getElementById('addModal').classList.add('open');
+}
+
+function showDetail(id){
+  const d=deals.find(x=>x.id===id);if(!d)return;
+  const st=si(d.stage);
+  const dh=stageHistory.filter(h=>h.dealId===id);
+  document.getElementById('detailContent').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+      <div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--ih-amber);letter-spacing:.05em">${d.client}</div>
+        <div style="font-size:11px;color:var(--ih-muted);margin-top:3px">${d.location}</div>
+      </div>
+      <span class="ih-badge" style="background:${st.bg};color:${st.color};border:1px solid ${st.color}50;font-size:10px;padding:4px 10px">${st.label}</span>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" style="width:${st.pct}%"></div></div>
+    <div class="detail-section"><h4>Financial</h4><div class="detail-grid">
+      <div><div class="dk">Monthly MRR</div><div class="dv" style="color:#E8A020">${fmt(d.mrr)}/mo</div></div>
+      <div><div class="dk">Annual ARR</div><div class="dv" style="color:#2DB87A">${fmt(arrV(d.mrr))}/yr</div></div>
+    </div></div>
+    <div class="detail-section"><h4>Team & timeline</h4><div class="detail-grid">
+      <div><div class="dk">Sales rep</div><div class="dv">${d.rep}</div></div>
+      <div><div class="dk">First contact</div><div class="dv">${d.firstContact}</div></div>
+      <div><div class="dk">Target close</div><div class="dv">${d.closeDate||'TBD'}</div></div>
+      <div><div class="dk">Install date</div><div class="dv">${d.installDate||'TBD'}</div></div>
+      <div style="grid-column:1/-1"><div class="dk">Team members</div><div class="dv">${d.teamMembers||'—'}</div></div>
+    </div></div>
+    <div class="detail-section"><h4>Technical specs</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">${EQUIPMENT_OPTS.map(o=>{
+        const key=o.replace(/\s/g,'_');
+        const q=(d.equipQty&&d.equipQty[key])||0;
+        return`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#0D1016;border:1px solid ${q>0?'#E8A02040':'var(--ih-border)'};border-radius:var(--r)">
+          <span style="font-size:11px;color:${q>0?'var(--ih-text)':'var(--ih-muted)'}">${o}</span>
+          <span style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:${q>0?'#E8A020':'var(--ih-dim)'}">${q}</span>
+        </div>`;
+      }).join('')}</div>
+    </div>
+    ${d.notes?`<div class="detail-section"><h4>Notes</h4><div style="font-size:12px;color:var(--ih-text);background:#0D1016;padding:10px 12px;border-radius:var(--r);border:1px solid var(--ih-border);line-height:1.6">${d.notes}</div></div>`:''}
+    ${dh.length?`<div class="detail-section"><h4>Stage history</h4>${dh.map(h=>{const t=si(h.to);return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--ih-border);font-size:10px">
+      <div style="width:6px;height:6px;border-radius:50%;background:${t.color};flex-shrink:0"></div>
+      <span style="color:var(--ih-muted)">${h.date}</span>
+      <span style="color:var(--ih-text)">&#8594;</span>
+      <span class="ih-badge" style="background:${t.bg};color:${t.color}">${t.label}</span>
+      ${h.note?`<span style="color:var(--ih-muted)">&nbsp;${h.note}</span>`:''}
+    </div>`}).join('')}</div>`:''}
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--ih-border)">
+      <button class="ih-btn" id="dClose">Close</button>
+      <button class="ih-btn primary" id="dEdit">Edit Deal</button>
+    </div>`;
+  document.getElementById('detailModal').classList.add('open');
+  document.getElementById('dClose').onclick=()=>document.getElementById('detailModal').classList.remove('open');
+  document.getElementById('dEdit').onclick=()=>{document.getElementById('detailModal').classList.remove('open');openEditModal(id)};
+}
+
+document.getElementById('saveBtn').onclick=()=>{
+  const form=document.getElementById('formFields'),data={};
+  form.querySelectorAll('[name]').forEach(el=>{
+    if(el.name.startsWith('qty_')){
+      if(!data.equipQty)data.equipQty={};
+      data.equipQty[el.name.replace('qty_','')]=parseInt(el.value)||0;
+    } else {
+      data[el.name]=el.value;
+    }
+  });
+  if(!data.equipQty)data.equipQty={Camera:0,Brain_Box:0,Drone:0,Puck:0};
+  data.equipment=EQUIPMENT_OPTS.filter(o=>( data.equipQty[o.replace(/\s/g,'_')]||0)>0).map(o=>`${o} ×${data.equipQty[o.replace(/\s/g,'_')]}`).join(', ');
+  data.mrr=parseFloat(data.mrr)||0;
+  if(!data.client){alert('Client name is required');return;}
+  if(editingId){
+    const idx=deals.findIndex(d=>d.id===editingId),old=deals[idx];
+    if(old.stage!==data.stage)stageHistory.push({dealId:editingId,dealName:data.client,from:old.stage,to:data.stage,by:data.rep,date:new Date().toISOString().slice(0,10),note:''});
+    deals[idx]={...old,...data};
+  }else{deals.push({id:nextId++,...data});}
+  document.getElementById('addModal').classList.remove('open');render();saveDealsToSheet();
+};
+document.getElementById('deleteBtn').onclick=()=>{
+  if(!confirm('Permanently delete this deal?'))return;
+  deals=deals.filter(d=>d.id!==editingId);
+  document.getElementById('addModal').classList.remove('open');render();saveDealsToSheet();
+};
+document.getElementById('cancelBtn').onclick=()=>document.getElementById('addModal').classList.remove('open');
+document.getElementById('addModal').onclick=e=>{if(e.target===document.getElementById('addModal'))document.getElementById('addModal').classList.remove('open')};
+document.getElementById('detailModal').onclick=e=>{if(e.target===document.getElementById('detailModal'))document.getElementById('detailModal').classList.remove('open')};
+document.getElementById('clearFilters').onclick=()=>{['fRep','fStage','fMrr','fSearch'].forEach(id=>document.getElementById(id).value='');render();};
+['fRep','fStage','fMrr','fSearch'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+document.getElementById('histFilter').addEventListener('change',renderHistory);
+
+document.querySelectorAll('.ih-tab').forEach(tab=>{
+  tab.onclick=function(){
+    document.querySelectorAll('.ih-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.ih-page').forEach(p=>p.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('page-'+this.dataset.page).classList.add('active');
+    render();
+  };
+});
+
+document.getElementById('toggleView').onclick=function(){
+  const listTab=document.querySelector('[data-page="list"]'),kanbanTab=document.querySelector('[data-page="kanban"]');
+  if(kanbanTab.classList.contains('active')){listTab.click();this.textContent='Kanban view';}
+  else{kanbanTab.click();this.textContent='List view';}
+};
+
+document.getElementById('exportBtn').onclick=()=>{
+  const data=filtered();
+  const headers=['Client','Location','Rep','Stage','First Contact','MRR','ARR','Close Date','Install Date','Camera Qty','Brain Box Qty','Drone Qty','Puck Qty','Team Members','Notes'];
+  const rows=data.map(d=>{
+    const q=d.equipQty||{};
+    return[d.client,d.location,d.rep,si(d.stage).label,d.firstContact,d.mrr,arrV(d.mrr),d.closeDate,d.installDate,q.Camera||0,q.Brain_Box||0,q.Drone||0,q.Puck||0,d.teamMembers,d.notes].map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',');
+  });
+  const csv=[headers.join(','),...rows].join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='ironhornet_pipeline_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+};
+
+loadDealsFromSheet();
+</body>
+</html>
